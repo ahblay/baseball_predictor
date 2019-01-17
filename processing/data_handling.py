@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 refs_home = {
     'abs': 49,
@@ -217,18 +218,24 @@ def get_columns_to_sum():
 
 def main():
     pd.set_option('display.max_columns', 500)
-    df = pd.read_csv("./data/GL2018.TXT", header=None)
+    dfs = []
 
-    remove = [1, 4, 7, 11, 13, 14, 15, 16, 17, 18, 19, 20, 39]
-    for i in range(77, 161):
-        remove.append(i)
+    for filename in os.listdir("./data/raw"):
+        print(filename)
+        df = pd.read_csv(f"./data/raw/{filename}", header=None)
 
-    df.drop(remove, 1, inplace=True)
+        remove = [1, 4, 7, 11, 13, 14, 15, 16, 17, 18, 19, 20, 39]
+        for i in range(77, 161):
+            remove.append(i)
 
-    data = generate_data(df, 10)
-    print(data.head(10))
+        df.drop(remove, 1, inplace=True)
 
-    save_to_csv("./data/master_data.csv", data)
+        data = generate_data(df, 10)
+        print(data.head(10))
+        dfs.append(data)
+
+    all_data = pd.concat(dfs, ignore_index=True)
+    save_to_csv("./data/all_master_data.csv", all_data)
 
 
 if __name__ == "__main__":
