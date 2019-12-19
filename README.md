@@ -1,6 +1,3 @@
-# baseball_predictor
-A baseball game outcome predictor with various ML classifier options.
-
 # Baseball Predictor
 
 A project intended to predict the outcome of baseball games through machine learning. Classifiers are trained on data
