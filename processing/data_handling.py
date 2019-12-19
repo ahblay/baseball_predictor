@@ -75,7 +75,7 @@ def get_all_last_n(df, index, n):
     return all_last_n
 
 
-def generate_data(df, n):
+def generate_data(df, ns):
     df_data = {}
     counter = 0
     for index, row in df.iterrows():
@@ -99,7 +99,9 @@ def generate_data(df, n):
         ht = df.at[index, 6]
         at = df.at[index, 3]
 
-        row = get_all_last_n(df, index, n)
+        row = {}
+        for n in ns:
+            row.update(get_all_last_n(df, index, n))
         row["ht"] = ht
         row["ht_wins"] = ht_wins
         row["ht_losses"] = ht_losses
@@ -219,6 +221,7 @@ def get_columns_to_sum():
 def main():
     pd.set_option('display.max_columns', 500)
     dfs = []
+    ns = [2, 5, 10, 20, 50]
 
     for filename in os.listdir("./data/raw"):
         print(filename)
@@ -230,12 +233,11 @@ def main():
 
         df.drop(remove, 1, inplace=True)
 
-        data = generate_data(df, 10)
-        print(data.head(10))
+        data = generate_data(df, ns)
         dfs.append(data)
 
     all_data = pd.concat(dfs, ignore_index=True)
-    save_to_csv("./data/all_master_data.csv", all_data)
+    save_to_csv("./data/big_data.csv", all_data)
 
 
 if __name__ == "__main__":

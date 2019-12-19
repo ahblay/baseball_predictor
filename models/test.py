@@ -1,10 +1,6 @@
-from models.model import Model
-import matplotlib.pyplot as plt
 from sklearn.feature_selection import chi2, f_classif
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
-from collections import namedtuple
 from setup_logger import logger
 from pprint import pprint as pp
 from statistics import stdev, mean

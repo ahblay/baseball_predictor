@@ -1,10 +1,10 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from setup_logger import logger
-from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectKBest, RFE
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -21,6 +21,7 @@ class Model:
         self.y_train = None
         self.y_test = None
         self.y_pred = None
+        self.X_columns = None
 
     def drop_columns(self, columns):
         self.data = self.data.drop(columns, axis=1)
@@ -30,6 +31,9 @@ class Model:
         self.X = self.data.drop(results, axis=1)
         self.y = self.data[results]
         logger.info("Split data into X and y")
+
+    def to_numerical(self):
+        self.y = self.y.astype(int)
 
     def split_data(self, pct, seed=None):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=pct, random_state=seed)
@@ -51,6 +55,14 @@ class Model:
         self.X_test = lda.transform(self.X_test)
         logger.info("Performed feature selection with LDA")
 
+    def rfe(self, n):
+        rfe = RFE(self.clf, n)
+        logger.info("Fitting RFE to data...")
+        fit = rfe.fit(self.X, self.y)
+        logger.info(f"RFE support: {fit.support_}")
+        logger.info(f"RFE ranking: {fit.ranking_}")
+        self.X = rfe.transform(self.X)
+
     def k_best(self, func, k, test=False):
         k_best = SelectKBest(score_func=func, k=k)
         fit = k_best.fit(self.X, self.y)
@@ -63,10 +75,10 @@ class Model:
         logger.info(f"Choosing {str(k)} best features with function {str(func)}...")
         logger.info(feature_scores.nlargest(k, 'Score'))
 
-        if test:
-            return feature_scores.nlargest(k, "Score")
-        else:
-            self.X = k_best.transform(self.X)
+        self.X_columns = feature_scores.nlargest(k, 'Score')["Specs"]
+        self.X = k_best.transform(self.X)
+        logger.info(self.X_columns)
+        logger.info(self.X)
 
     def feature_corr(self):
         corr = self.data.corr()
@@ -91,3 +103,10 @@ class Model:
         cr = classification_report(self.y_test, self.y_pred)
         logger.info("Evaluated classifier performance.")
         return ac, cm, cr
+
+    def feature_importances(self):
+        # TODO: this may not be labeled accurately UGH
+        fi = pd.DataFrame(self.clf.feature_importances_,
+                          index=self.X_columns,
+                          columns=['importance']).sort_values('importance', ascending=False)
+        return fi
